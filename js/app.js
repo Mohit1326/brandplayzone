@@ -29,6 +29,22 @@ BPZ.state = {
   coachMessage: '',
   topicId: null,
   caseId: null,
+
+  // ── RATIONALE GATE STATE ─────────────────────────────────
+  pendingEventOption: null,      // option object player has highlighted but not confirmed
+  rationaleStep: 0,              // 0=picking, 1=Q1 shown, 2=Q2 shown, 3=ready to lock
+  rationaleScore: 0,             // correct answers (0–2)
+  rationaleLastAnswer: null,     // {questionNum, answerId, correct}
+
+  // ── DEBRIEF STATE ────────────────────────────────────────
+  debriefQuestions: [],          // 2 question objects from rationaleData.debrief
+  debriefStep: 0,                // 0=Q1, 1=Q2, 2=done
+  debriefScore: 0,               // correct debrief answers
+  debriefDone: false,
+  debriefLastAnswer: null,       // {answerId, correct, insight}
+
+  // ── PER-YEAR MIX MEMORY ──────────────────────────────────
+  mixPerYear: {},                // { 1: {tv,digital,trade,pr}, 2: {...} }
 };
 
 // ── ROUTER ──────────────────────────────────────────────────
@@ -41,25 +57,25 @@ BPZ.navigate = function(screen, extra) {
 
 BPZ.render = function() {
   const views = {
-    'landing':       BPZ.ui.landing,
-    'setup-player':  BPZ.ui.setupPlayer,
-    'world-builder': BPZ.ui.worldBuilder,
-    'brand-studio':  BPZ.ui.brandStudio,
-    'segments':      BPZ.ui.segments,
-    'channels':      BPZ.ui.channels,
-    'marketing-mix': BPZ.ui.marketingMix,
-    'event-card':    BPZ.ui.eventCard,
-    'dashboard':     BPZ.ui.dashboard,
-    'final-report':  BPZ.ui.finalReport,
-    'learn-hub':     BPZ.ui.learnHub,
-    'learn-topic':   BPZ.ui.learnTopic,
-    'case-study':    BPZ.ui.caseStudy,
+    'landing':           BPZ.ui.landing,
+    'setup-player':      BPZ.ui.setupPlayer,
+    'world-builder':     BPZ.ui.worldBuilder,
+    'brand-studio':      BPZ.ui.brandStudio,
+    'segments':          BPZ.ui.segments,
+    'channels':          BPZ.ui.channels,
+    'marketing-mix':     BPZ.ui.marketingMix,
+    'event-card':        BPZ.ui.eventCard,
+    'dashboard':         BPZ.ui.dashboard,
+    'final-report':      BPZ.ui.finalReport,
+    'learn-hub':         BPZ.ui.learnHub,
+    'learn-topic':       BPZ.ui.learnTopic,
+    'case-study':        BPZ.ui.caseStudy,
+    'debrief-questions': BPZ.ui.debriefQuestions,
   };
   const fn  = views[BPZ.state.screen];
   const app = document.getElementById('app');
   if (fn && app) {
     app.innerHTML = fn();
-    // Charts need the DOM to exist first
     if (BPZ.state.screen === 'dashboard') {
       requestAnimationFrame(() => BPZ.ui.initDashboardCharts());
     }
@@ -72,7 +88,6 @@ BPZ.toggleChannel = function(channelId) {
   if (idx >= 0) {
     BPZ.state.selectedChannels.splice(idx, 1);
   } else {
-    // Default allocation: equal share up to reasonable cap
     const defaultPct = Math.min(20, Math.floor(80 / (BPZ.state.selectedChannels.length + 1)));
     BPZ.state.selectedChannels.push({ id: channelId, budgetPct: defaultPct });
   }
@@ -82,7 +97,6 @@ BPZ.toggleChannel = function(channelId) {
 BPZ.setChannelBudget = function(channelId, pct) {
   const ch = BPZ.state.selectedChannels.find(c => c.id === channelId);
   if (ch) ch.budgetPct = pct;
-  // No re-render here — slider handles its own label update
 };
 
 // ── MARKETING MIX HELPER ─────────────────────────────────────
@@ -93,7 +107,6 @@ BPZ.setMix = function(key, val) {
   const totalEl = document.getElementById('mix-total');
   const btnEl   = document.getElementById('launch-btn');
   const pctEl   = document.getElementById('mix-pct-' + key);
-  const budget  = BPZ.state.brand.budgetCrore;
 
   if (pctEl) pctEl.textContent = val + '%';
   if (totalEl) {
@@ -110,11 +123,72 @@ BPZ.setMix = function(key, val) {
 // ── LAUNCH BRAND (Year 1 kick-off) ──────────────────────────
 BPZ.launchBrand = function() {
   BPZ.state.currentYear = 1;
-  // Draw a Year 1 event card
+  // Save Year 1 mix
+  BPZ.state.mixPerYear[1] = { ...BPZ.state.marketingMix };
+  // Reset rationale state for fresh event card
+  BPZ.state.pendingEventOption = null;
+  BPZ.state.rationaleStep      = 0;
+  BPZ.state.rationaleScore     = 0;
+  BPZ.state.rationaleLastAnswer = null;
   const event = BPZ.engine.drawEventCard(1, BPZ.state.usedEventIds);
   BPZ.state.currentEvent   = event;
   BPZ.state.eventResponse  = null;
   BPZ.navigate('event-card');
+};
+
+// ── SELECT EVENT OPTION (highlight, show preview + rationale) ─
+BPZ.selectEventOption = function(optionId) {
+  const event = BPZ.state.currentEvent;
+  if (!event) return;
+  const option = event.options.find(o => o.id === optionId);
+  if (!option) return;
+
+  BPZ.state.pendingEventOption  = option;
+  BPZ.state.rationaleStep       = 1;   // show Q1
+  BPZ.state.rationaleScore      = 0;
+  BPZ.state.rationaleLastAnswer = null;
+  BPZ.render();
+};
+
+// ── ANSWER RATIONALE QUESTION ────────────────────────────────
+BPZ.answerRationale = function(questionNum, answerId) {
+  const event  = BPZ.state.currentEvent;
+  const option = BPZ.state.pendingEventOption;
+  if (!event || !option) return;
+
+  const rationaleBank = BPZ.rationaleData && BPZ.rationaleData.events
+    ? BPZ.rationaleData.events[event.id]
+    : null;
+  const qBank = rationaleBank ? rationaleBank[option.id] : null;
+  const qKey  = questionNum === 1 ? 'q1' : 'q2';
+  const qData = qBank ? qBank[qKey] : null;
+
+  let correct = false;
+  if (qData) {
+    const chosen = qData.options.find(o => o.id === answerId);
+    correct = chosen ? !!chosen.correct : false;
+  }
+
+  if (correct) BPZ.state.rationaleScore += 1;
+
+  BPZ.state.rationaleLastAnswer = { questionNum, answerId, correct };
+
+  // Advance step: after Q1 answered → show Q2; after Q2 → ready to lock
+  if (questionNum === 1) {
+    BPZ.state.rationaleStep = 2;
+  } else {
+    BPZ.state.rationaleStep = 3;
+  }
+  BPZ.render();
+};
+
+// ── CONFIRM EVENT DECISION (lock in after rationale) ─────────
+BPZ.confirmEventDecision = function() {
+  if (!BPZ.state.pendingEventOption) return;
+  BPZ.state.eventResponse      = BPZ.state.pendingEventOption;
+  BPZ.state.pendingEventOption = null;
+  BPZ.state.rationaleStep      = 0;
+  BPZ.resolveEvent();
 };
 
 // ── RESOLVE EVENT → RUN SIMULATION ──────────────────────────
@@ -123,33 +197,109 @@ BPZ.resolveEvent = function() {
     selectedChannels: BPZ.state.selectedChannels,
     marketingMix:     BPZ.state.marketingMix,
   };
-  const newMetrics = BPZ.engine.runYear(BPZ.state, decisions, BPZ.state.eventResponse);
+  const prevMetrics = { ...BPZ.state.metrics };
+  const newMetrics  = BPZ.engine.runYear(BPZ.state, decisions, BPZ.state.eventResponse);
 
-  // Save history
   BPZ.state.history.push({ ...newMetrics });
 
-  // Track used events
   if (BPZ.state.currentEvent) {
     BPZ.state.usedEventIds.push(BPZ.state.currentEvent.id);
   }
 
-  // Build coach message
   BPZ.state.coachMessage = BPZ.engine.buildCoachMessage(
     BPZ.state, decisions, newMetrics, BPZ.state.eventResponse
   );
 
-  // Update live metrics
-  BPZ.state.metrics = { ...newMetrics };
+  BPZ.state.metrics      = { ...newMetrics };
+  BPZ.state._prevMetrics = prevMetrics;   // save for debrief context
   BPZ.state.eventResponse = null;
   BPZ.state.currentEvent  = null;
 
   BPZ.navigate('dashboard');
 };
 
+// ── START DEBRIEF (called from dashboard "Continue" button) ──
+BPZ.startDebrief = function() {
+  const year    = BPZ.state.currentYear;
+  const metrics = BPZ.state.metrics;
+  const prev    = BPZ.state._prevMetrics || metrics;
+  const decisions = {
+    selectedChannels: BPZ.state.selectedChannels,
+    marketingMix:     BPZ.state.marketingMix,
+  };
+
+  const questions = BPZ.engine.getDebriefQuestions(year, metrics, prev, decisions);
+
+  BPZ.state.debriefQuestions  = questions;
+  BPZ.state.debriefStep       = 0;
+  BPZ.state.debriefScore      = 0;
+  BPZ.state.debriefDone       = false;
+  BPZ.state.debriefLastAnswer = null;
+
+  BPZ.navigate('debrief-questions');
+};
+
+// ── ANSWER DEBRIEF QUESTION ──────────────────────────────────
+BPZ.answerDebrief = function(answerId) {
+  const step = BPZ.state.debriefStep;
+  const q    = BPZ.state.debriefQuestions[step];
+  if (!q) return;
+
+  const chosen  = (q.options || []).find(o => o.id === answerId);
+  const correct = chosen ? !!chosen.correct : false;
+  const insight = q.insight || '';
+
+  if (correct) BPZ.state.debriefScore += 1;
+  BPZ.state.debriefLastAnswer = { answerId, correct, insight };
+
+  if (step + 1 >= BPZ.state.debriefQuestions.length) {
+    BPZ.state.debriefDone = true;
+  } else {
+    BPZ.state.debriefStep += 1;
+    BPZ.state.debriefLastAnswer = null; // reset for next question display
+  }
+  BPZ.render();
+};
+
+// ── SKIP DEBRIEF ANSWER (show next question) ─────────────────
+BPZ.nextDebriefQuestion = function() {
+  BPZ.state.debriefStep       += 1;
+  BPZ.state.debriefLastAnswer  = null;
+  BPZ.render();
+};
+
+// ── COMPLETE DEBRIEF → advance to next year or final report ──
+BPZ.completeDebrief = function() {
+  const year = BPZ.state.currentYear;
+  if (year >= BPZ.state.maxYears) {
+    BPZ.navigate('final-report');
+    return;
+  }
+  BPZ.startNextYear();
+};
+
 // ── START NEXT YEAR ──────────────────────────────────────────
 BPZ.startNextYear = function() {
   BPZ.state.currentYear += 1;
-  const event = BPZ.engine.drawEventCard(BPZ.state.currentYear, BPZ.state.usedEventIds);
+  const nextYear = BPZ.state.currentYear;
+
+  // Reset rationale state for fresh event card
+  BPZ.state.pendingEventOption  = null;
+  BPZ.state.rationaleStep       = 0;
+  BPZ.state.rationaleScore      = 0;
+  BPZ.state.rationaleLastAnswer = null;
+
+  // Navigate to marketing-mix first so player can adjust for new year
+  BPZ.navigate('marketing-mix');
+};
+
+// ── PROCEED TO EVENT (called from marketing-mix "Launch" btn) ─
+BPZ.proceedToEvent = function() {
+  const year = BPZ.state.currentYear;
+  // Save mix for this year
+  BPZ.state.mixPerYear[year] = { ...BPZ.state.marketingMix };
+
+  const event = BPZ.engine.drawEventCard(year, BPZ.state.usedEventIds);
   BPZ.state.currentEvent  = event;
   BPZ.state.eventResponse = null;
   BPZ.navigate('event-card');
@@ -177,6 +327,11 @@ BPZ.resetGame = function() {
       brandEquityIndex: 17, nps: 0,
     },
     coachMessage: '', topicId: null, caseId: null,
+    pendingEventOption: null, rationaleStep: 0,
+    rationaleScore: 0, rationaleLastAnswer: null,
+    debriefQuestions: [], debriefStep: 0,
+    debriefScore: 0, debriefDone: false, debriefLastAnswer: null,
+    mixPerYear: {},
   };
   BPZ.navigate('landing');
 };

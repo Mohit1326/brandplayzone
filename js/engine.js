@@ -281,4 +281,59 @@ BPZ.engine = {
     return { letter: 'F', comment: 'This brand needs a reset. Study the case studies in the Learn Hub before your next simulation.' };
   },
 
+  /**
+   * Run a quick projection for a single event option without mutating state.
+   * Returns projected metrics after applying the option's effect.
+   */
+  previewScenario(state, option) {
+    const decisions = {
+      selectedChannels: state.selectedChannels,
+      marketingMix: state.marketingMix,
+    };
+    const clone = {
+      ...state,
+      metrics: {
+        ...state.metrics,
+        brandEquity: { ...state.metrics.brandEquity },
+      },
+    };
+    return BPZ.engine.runYear(clone, decisions, option);
+  },
+
+  /**
+   * Pick 2 Socratic debrief questions based on year's performance signals.
+   * @returns {Array} — array of 2 question objects from BPZ.rationaleData.debrief
+   */
+  getDebriefQuestions(year, metrics, prevMetrics, decisions) {
+    const db = BPZ.rationaleData.debrief;
+    const questions = [];
+
+    // Signal 1 — pick the most pressing issue as Q1
+    if (metrics.awareness < 20 && db.lowAwareness) {
+      questions.push({ ...db.lowAwareness, signal: 'lowAwareness' });
+    } else if (metrics.awareness > 30 && metrics.trial < 15 && db.highAwarenessLowTrial) {
+      questions.push({ ...db.highAwarenessLowTrial, signal: 'highAwarenessLowTrial' });
+    } else if (metrics.brandEquityIndex < 35 && db.lowEquity) {
+      questions.push({ ...db.lowEquity, signal: 'lowEquity' });
+    } else if (metrics.ebitdaCrore < 0 && db.negativeEBITDA) {
+      questions.push({ ...db.negativeEBITDA, signal: 'negativeEBITDA' });
+    } else if (db.strongYear) {
+      questions.push({ ...db.strongYear, signal: 'strongYear' });
+    }
+
+    // Q2 — always the forward-looking mix strategy question
+    if (db.mixForward) {
+      questions.push({ ...db.mixForward, signal: 'mixForward' });
+    }
+
+    // Fallback: if nothing matched, use first two available templates
+    if (questions.length === 0) {
+      const keys = Object.keys(db);
+      if (keys[0]) questions.push({ ...db[keys[0]], signal: keys[0] });
+      if (keys[1]) questions.push({ ...db[keys[1]], signal: keys[1] });
+    }
+
+    return questions.slice(0, 2);
+  },
+
 };

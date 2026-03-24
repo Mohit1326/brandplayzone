@@ -514,9 +514,14 @@ BPZ.ui.channels = function() {
 //  MARKETING MIX
 // ════════════════════════════════════════════════════════════
 BPZ.ui.marketingMix = function() {
-  const budget = BPZ.state.brand.budgetCrore;
-  const mix    = BPZ.state.marketingMix;
-  const total  = mix.tv + mix.digital + mix.trade + mix.pr;
+  const budget   = BPZ.state.brand.budgetCrore;
+  const mix      = BPZ.state.marketingMix;
+  const total    = mix.tv + mix.digital + mix.trade + mix.pr;
+  const year     = BPZ.state.currentYear;
+  const isYear1  = year === 0 || year === 1;
+  const prevMix  = BPZ.state.mixPerYear[year - 1] || null;
+  const prevM    = BPZ.state.metrics;
+
   const mixItems = [
     { key: 'tv',      icon: '📺', label: 'TV / ATL',        colour: '#6366f1', description: 'National reach, mass awareness. Works best for mass and traditional segments.' },
     { key: 'digital', icon: '📱', label: 'Digital',         colour: '#22d3ee', description: 'Social, search, influencers, CRM. Precision targeting. Essential for Gen Z and millennials.' },
@@ -525,29 +530,85 @@ BPZ.ui.marketingMix = function() {
   ];
   const segment = BPZ.data.segments.find(s => s.id === BPZ.state.targetSegmentId);
 
+  // ── Year context signals (Year 2+) ────────────────────────
+  const yearContextSection = (!isYear1 && prevMix) ? (() => {
+    const signals = [];
+    if (prevM.awareness > 30 && prevM.trial < 15) {
+      signals.push({ icon: '⚠️', text: `Awareness is high (${prevM.awareness}%) but trial is only ${prevM.trial}%. Shift budget toward Trade/BTL to convert awareness into first purchase.`, col: '#f59e0b' });
+    }
+    if (prevMix.tv > 50 && segment && segment.mediaAffinity.tv < 0.6) {
+      signals.push({ icon: '📺', text: `TV was ${prevMix.tv}% of mix but your segment has low TV affinity. Consider shifting toward Digital.`, col: '#f43f5e' });
+    }
+    if (prevM.brandEquityIndex < 35 && prevMix.pr < 12) {
+      signals.push({ icon: '💎', text: `Brand equity is weak (${prevM.brandEquityIndex}/100). PR was only ${prevMix.pr}% — PR per rupee is your most cost-effective equity builder.`, col: '#818cf8' });
+    }
+    if (prevM.distribution < 30 && prevMix.trade < 20) {
+      signals.push({ icon: '🗺️', text: `Distribution is only ${prevM.distribution}% — trade activation drove this. Increase Trade/BTL to push products into more outlets.`, col: '#10b981' });
+    }
+    if (signals.length === 0) {
+      signals.push({ icon: '✅', text: `Year ${year - 1} mix is working. Consider pushing your strongest lever further.`, col: '#10b981' });
+    }
+    return `
+      <div style="background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.2);border-radius:14px;padding:20px 24px;margin-bottom:24px;">
+        <div style="font-size:12px;font-weight:700;color:#818cf8;letter-spacing:0.05em;margin-bottom:14px;">📊 YEAR ${year - 1} RETROSPECTIVE — WHAT TO ADJUST</div>
+        <div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap;">
+          ${['tv','digital','trade','pr'].map(k => `
+            <div style="text-align:center;background:var(--elevated);border-radius:8px;padding:8px 14px;">
+              <div style="font-size:14px;font-weight:700;color:var(--text);">${prevMix[k]}%</div>
+              <div style="font-size:10px;color:var(--muted);">${k === 'tv' ? 'TV' : k === 'digital' ? 'Digital' : k === 'trade' ? 'Trade' : 'PR'}</div>
+            </div>`).join('')}
+          <div style="text-align:center;background:var(--elevated);border-radius:8px;padding:8px 14px;">
+            <div style="font-size:14px;font-weight:700;color:#22d3ee;">${prevM.marketShare}%</div>
+            <div style="font-size:10px;color:var(--muted);">Share</div>
+          </div>
+          <div style="text-align:center;background:var(--elevated);border-radius:8px;padding:8px 14px;">
+            <div style="font-size:14px;font-weight:700;color:#6366f1;">${prevM.brandEquityIndex}</div>
+            <div style="font-size:10px;color:var(--muted);">Equity</div>
+          </div>
+        </div>
+        ${signals.map(s => `
+          <div style="display:flex;align-items:start;gap:10px;margin-bottom:8px;">
+            <span style="font-size:16px;flex-shrink:0;">${s.icon}</span>
+            <p style="font-size:13px;color:${s.col};margin:0;line-height:1.5;">${s.text}</p>
+          </div>`).join('')}
+      </div>`;
+  })() : '';
+
   return `
     <div style="min-height:100vh;background:var(--bg);">
       ${renderNav('Marketing Mix')}
       <div style="max-width:900px;margin:0 auto;padding:48px 24px;">
-        ${renderStepper(5, 5)}
+        ${isYear1 ? renderStepper(5, 5) : `
+          <div class="flex items-center gap-3 mb-8">
+            <span class="tag tag-indigo">Year ${year}</span>
+            <h1 class="font-display font-bold text-2xl">Adjust Your Marketing Mix</h1>
+          </div>`}
 
-        <div class="mb-8">
-          <div class="tag tag-indigo mb-3">Step 5 — Marketing Mix</div>
-          <h1 class="font-display font-bold text-3xl mb-2">Allocate your ₹${budget} Crore</h1>
-          <p style="color:var(--text-sub);">Distribute your annual budget across the four spend buckets. The mix determines your awareness, trial, and brand equity growth rates.</p>
+        <div class="mb-6">
+          ${isYear1 ? `<div class="tag tag-indigo mb-3">Step 5 — Marketing Mix</div>` : ''}
+          <h1 class="font-display font-bold text-3xl mb-2">${isYear1 ? `Allocate your ₹${budget} Crore` : `Year ${year} Mix — ₹${budget} Crore`}</h1>
+          <p style="color:var(--text-sub);">${isYear1 ? 'Distribute your annual budget across the four spend buckets.' : `Adjust your mix based on Year ${year - 1} results. Every percentage point shifts your outcomes.`}</p>
         </div>
+
+        <!-- Year context (Year 2+) -->
+        ${yearContextSection}
 
         <!-- Segment media hint -->
         ${segment ? `
           <div style="background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.2);border-radius:12px;padding:14px 18px;margin-bottom:24px;font-size:13px;color:var(--text-sub);">
             💡 <strong style="color:#22d3ee;">${segment.name}</strong> prefers ${segment.mediaAffinity.digital > 1.2 ? 'digital-first media (low TV affinity)' : segment.mediaAffinity.tv > 1.2 ? 'TV-heavy media mix' : 'balanced media'}.
-            Their channel preference: <strong>${segment.channelPreference.join(', ')}</strong>.
+            Channel preference: <strong>${segment.channelPreference.join(', ')}</strong>.
           </div>` : ''}
 
         <!-- Mix sliders -->
         <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:24px;">
           ${mixItems.map(item => {
-            const spend = (budget * mix[item.key] / 100).toFixed(1);
+            const spend    = (budget * mix[item.key] / 100).toFixed(1);
+            const prevPct  = prevMix ? prevMix[item.key] : null;
+            const delta    = prevPct !== null ? mix[item.key] - prevPct : null;
+            const deltaStr = delta !== null
+              ? `<span style="font-size:11px;color:${delta > 0 ? '#10b981' : delta < 0 ? '#f43f5e' : 'var(--muted)'};">${delta > 0 ? '▲' : delta < 0 ? '▼' : '—'}${Math.abs(delta)}% vs Y${year-1}</span>`
+              : '';
             return `
               <div style="margin-bottom:24px;">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
@@ -558,9 +619,10 @@ BPZ.ui.marketingMix = function() {
                       <div style="font-size:11px;color:var(--muted);max-width:320px;">${item.description}</div>
                     </div>
                   </div>
-                  <div style="text-align:right;min-width:80px;">
+                  <div style="text-align:right;min-width:90px;">
                     <div style="font-size:18px;font-weight:700;color:${item.colour};" id="mix-pct-${item.key}">${mix[item.key]}%</div>
                     <div style="font-size:11px;color:var(--muted);">₹${spend}Cr</div>
+                    ${deltaStr}
                   </div>
                 </div>
                 <input type="range" min="5" max="70" value="${mix[item.key]}"
@@ -576,7 +638,7 @@ BPZ.ui.marketingMix = function() {
 
         <!-- Estimated impact preview -->
         <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 24px;margin-bottom:24px;">
-          <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:14px;letter-spacing:0.05em;">EXPECTED YEAR 1 DIRECTION</div>
+          <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:14px;letter-spacing:0.05em;">EXPECTED YEAR ${isYear1 ? 1 : year} DIRECTION</div>
           <div class="grid grid-cols-3 gap-4">
             ${[
               { label: 'Awareness Lift', value: `+${Math.round((budget * mix.tv / 100) * 0.75 + (budget * mix.digital / 100) * 0.55)}%`, note: 'est.' },
@@ -592,16 +654,16 @@ BPZ.ui.marketingMix = function() {
         </div>
 
         <button class="btn-primary w-full text-base" id="launch-btn"
-          onclick="BPZ.launchBrand()"
+          onclick="${isYear1 ? 'BPZ.launchBrand()' : 'BPZ.proceedToEvent()'}"
           ${total !== 100 ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>
-          🚀 Launch Brand & Simulate Year 1
+          ${isYear1 ? '🚀 Launch Brand & Simulate Year 1' : `▶ Set Mix & Enter Year ${year} →`}
         </button>
       </div>
     </div>`;
 };
 
 // ════════════════════════════════════════════════════════════
-//  EVENT CARD
+//  EVENT CARD  (with Scenario Preview + Rationale Gate)
 // ════════════════════════════════════════════════════════════
 BPZ.ui.eventCard = function() {
   const ev = BPZ.state.currentEvent;
@@ -610,57 +672,176 @@ BPZ.ui.eventCard = function() {
     return '';
   }
 
+  const pending   = BPZ.state.pendingEventOption;
+  const rStep     = BPZ.state.rationaleStep;   // 0=picking, 1=Q1, 2=Q2, 3=ready
+  const lastAns   = BPZ.state.rationaleLastAnswer;
+  const cur       = BPZ.state.metrics;
+
+  // Scenario preview deltas (only when an option is pending)
+  let preview = null;
+  let previewSection = '';
+  if (pending) {
+    try {
+      preview = BPZ.engine.previewScenario(BPZ.state, pending);
+      const d = (key, unit='%') => {
+        const delta = (preview[key] - cur[key]);
+        const sign  = delta >= 0 ? '+' : '';
+        const col   = delta >= 0 ? '#10b981' : '#f43f5e';
+        return `<span style="font-weight:700;color:${col};">${sign}${delta.toFixed(1)}${unit}</span>`;
+      };
+      const eqDelta = preview.brandEquityIndex - cur.brandEquityIndex;
+      const eqSign  = eqDelta >= 0 ? '+' : '';
+      const eqCol   = eqDelta >= 0 ? '#10b981' : '#f43f5e';
+      previewSection = `
+        <div style="background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.2);border-radius:14px;padding:18px 20px;margin-bottom:20px;">
+          <div style="font-size:11px;font-weight:700;color:#22d3ee;letter-spacing:0.07em;margin-bottom:12px;">🔭 SCENARIO PREVIEW — IF YOU PICK: <em>${pending.label}</em></div>
+          <div class="grid grid-cols-2 gap-3" style="grid-template-columns:repeat(4,1fr);">
+            ${[
+              { label:'Awareness',    val: d('awareness') },
+              { label:'Market Share', val: d('marketShare') },
+              { label:'Brand Equity', val: `<span style="font-weight:700;color:${eqCol};">${eqSign}${eqDelta.toFixed(1)}</span>` },
+              { label:'EBITDA (₹Cr)', val: d('ebitdaCrore','') },
+            ].map(row => `
+              <div style="text-align:center;background:var(--elevated);border-radius:10px;padding:10px;">
+                <div style="font-size:15px;margin-bottom:2px;">${row.val}</div>
+                <div style="font-size:10px;color:var(--muted);">${row.label}</div>
+              </div>`).join('')}
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:10px;">⚡ Projected impact vs current metrics — actual results depend on all factors.</div>
+        </div>`;
+    } catch(e) { previewSection = ''; }
+  }
+
+  // ── Rationale questions ──────────────────────────────────
+  function renderRationaleQ(qNum) {
+    const eventRationale = (BPZ.rationaleData && BPZ.rationaleData.events) ? BPZ.rationaleData.events[ev.id] : null;
+    const optRationale   = eventRationale ? eventRationale[pending.id] : null;
+    const qData          = optRationale ? optRationale['q' + qNum] : null;
+
+    // No rationale data? skip gracefully
+    if (!qData) {
+      // Auto-advance if no question data found
+      if (rStep === 1 && qNum === 1) {
+        BPZ.state.rationaleStep = 3;
+        return '';
+      }
+      return '';
+    }
+
+    // Already answered this question?
+    const answered = (qNum === 1 && rStep >= 2) || (qNum === 2 && rStep >= 3);
+    // The last answer applies to the just-answered question
+    const thisAns  = (lastAns && lastAns.questionNum === qNum) ? lastAns : null;
+
+    return `
+      <div style="background:var(--card);border:1px solid ${answered && thisAns ? (thisAns.correct ? 'rgba(16,185,129,0.4)' : 'rgba(244,63,94,0.4)') : 'var(--border)'};border-radius:14px;padding:20px;margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;color:#818cf8;letter-spacing:0.06em;margin-bottom:10px;">🧠 THINK IT THROUGH — Q${qNum} OF 2</div>
+        <p style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:14px;">${qData.text}</p>
+        <div class="grid grid-cols-1 gap-2">
+          ${qData.options.map(opt => {
+            let border = 'var(--border)';
+            let bg     = 'var(--elevated)';
+            let badge  = '';
+            if (answered) {
+              if (opt.correct) { border='rgba(16,185,129,0.6)'; bg='rgba(16,185,129,0.08)'; badge='<span style="font-size:10px;background:#10b981;color:white;padding:1px 6px;border-radius:4px;margin-left:6px;">✓ Correct</span>'; }
+              else if (thisAns && thisAns.answerId === opt.id && !opt.correct) { border='rgba(244,63,94,0.5)'; bg='rgba(244,63,94,0.08)'; badge='<span style="font-size:10px;background:#f43f5e;color:white;padding:1px 6px;border-radius:4px;margin-left:6px;">✗</span>'; }
+            }
+            return `
+              <div style="border:1px solid ${border};background:${bg};border-radius:10px;padding:12px 14px;cursor:${answered ? 'default' : 'pointer'};"
+                ${!answered ? `onclick="BPZ.answerRationale(${qNum}, '${opt.id}')"` : ''}>
+                <span style="font-size:13px;color:var(--text);">${opt.text}</span>${badge}
+              </div>`;
+          }).join('')}
+        </div>
+        ${answered && qData.insight ? `
+          <div style="margin-top:14px;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:10px;padding:12px 14px;">
+            <span style="font-size:12px;color:#818cf8;font-weight:600;">💡 Insight: </span>
+            <span style="font-size:12px;color:var(--text-sub);">${qData.insight}</span>
+          </div>` : ''}
+      </div>`;
+  }
+
+  const showQ1 = rStep >= 1;
+  const showQ2 = rStep >= 2;
+  const showLock = rStep >= 3;
+
+  // Fallback: if no rationale data at all, show lock button immediately
+  const hasRationale = !!(BPZ.rationaleData && BPZ.rationaleData.events && ev && BPZ.rationaleData.events[ev.id]);
+  const effectiveShowLock = showLock || (rStep >= 1 && !hasRationale);
+
   return `
-    <div style="min-height:100vh;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
-      <div style="max-width:640px;width:100%;">
+    <div style="min-height:100vh;background:var(--bg);padding:24px;">
+      ${renderNav(`Year ${BPZ.state.currentYear} — Market Event`)}
+      <div style="max-width:700px;margin:0 auto;padding:32px 0;">
 
         <!-- Header -->
-        <div style="text-align:center;margin-bottom:32px;">
-          <div style="font-size:13px;font-weight:700;color:var(--muted);letter-spacing:0.1em;margin-bottom:8px;">YEAR ${BPZ.state.currentYear} — MARKET EVENT</div>
-          <div style="font-size:11px;color:var(--muted);">The market has thrown something at you. How do you respond?</div>
+        <div style="text-align:center;margin-bottom:28px;">
+          <div style="font-size:13px;font-weight:700;color:var(--muted);letter-spacing:0.1em;margin-bottom:6px;">YEAR ${BPZ.state.currentYear} — MARKET EVENT</div>
+          <div style="font-size:12px;color:var(--muted);">Study the situation, pick your move — but be ready to justify it.</div>
         </div>
 
         <!-- Event card -->
-        <div class="event-card-wrapper">
-          <div class="event-card-inner" style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px;margin-bottom:24px;">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-              <div style="width:52px;height:52px;border-radius:14px;background:${ev.categoryColour}22;border:1px solid ${ev.categoryColour}44;display:flex;align-items:center;justify-content:center;font-size:26px;">
-                ${ev.icon}
-              </div>
-              <div>
-                <span style="font-size:11px;font-weight:700;color:${ev.categoryColour};letter-spacing:0.05em;">${ev.category.toUpperCase()}</span>
-                <h2 class="font-display font-bold text-xl">${ev.title}</h2>
-              </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;margin-bottom:24px;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+            <div style="width:52px;height:52px;border-radius:14px;background:${ev.categoryColour}22;border:1px solid ${ev.categoryColour}44;display:flex;align-items:center;justify-content:center;font-size:26px;">
+              ${ev.icon}
             </div>
-            <p style="color:var(--text-sub);font-size:14px;line-height:1.7;margin-bottom:14px;">${ev.description}</p>
-            <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:12px 16px;">
-              <span style="font-size:12px;font-weight:600;color:#fcd34d;">📊 Business Impact: </span>
-              <span style="font-size:12px;color:var(--text-sub);">${ev.impact}</span>
+            <div>
+              <span style="font-size:11px;font-weight:700;color:${ev.categoryColour};letter-spacing:0.05em;">${ev.category.toUpperCase()}</span>
+              <h2 class="font-display font-bold text-xl">${ev.title}</h2>
             </div>
+          </div>
+          <p style="color:var(--text-sub);font-size:14px;line-height:1.7;margin-bottom:14px;">${ev.description}</p>
+          <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:10px 14px;">
+            <span style="font-size:12px;font-weight:600;color:#fcd34d;">📊 Business Impact: </span>
+            <span style="font-size:12px;color:var(--text-sub);">${ev.impact}</span>
           </div>
         </div>
 
-        <!-- Response options -->
-        <div style="margin-bottom:8px;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:0.05em;">CHOOSE YOUR RESPONSE</div>
-        <div class="grid grid-cols-1 gap-3">
-          ${ev.options.map(opt => `
-            <div class="selectable card-hover ${BPZ.state.eventResponse && BPZ.state.eventResponse.id === opt.id ? 'selected' : ''}"
-              style="border-radius:14px;padding:18px;"
-              onclick="BPZ.state.eventResponse=BPZ.data.events.find(e=>e.id==='${ev.id}').options.find(o=>o.id==='${opt.id}');BPZ.render();">
-              <div style="display:flex;align-items:start;justify-content:space-between;gap:12px;">
-                <div style="flex:1;">
-                  <div class="font-semibold text-sm mb-1">${opt.label}</div>
-                  <div style="font-size:12px;color:var(--text-sub);">${opt.description}</div>
+        <!-- Response options (always visible) -->
+        <div style="margin-bottom:10px;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:0.05em;">CHOOSE YOUR RESPONSE</div>
+        <div class="grid grid-cols-1 gap-3 mb-6">
+          ${ev.options.map(opt => {
+            const isSelected = pending && pending.id === opt.id;
+            return `
+              <div class="selectable card-hover ${isSelected ? 'selected' : ''}"
+                style="border-radius:14px;padding:16px;${isSelected ? 'border-color:#6366f1;' : ''}"
+                onclick="BPZ.selectEventOption('${opt.id}')">
+                <div style="display:flex;align-items:start;justify-content:space-between;gap:12px;">
+                  <div style="flex:1;">
+                    <div class="font-semibold text-sm mb-1">${opt.label}</div>
+                    <div style="font-size:12px;color:var(--text-sub);">${opt.description}</div>
+                  </div>
+                  ${opt.cost > 0
+                    ? `<span class="tag tag-amber" style="flex-shrink:0;">₹${opt.cost}Cr extra</span>`
+                    : '<span class="tag tag-emerald" style="flex-shrink:0;">No cost</span>'}
                 </div>
-                ${opt.cost > 0 ? `<span class="tag tag-amber" style="flex-shrink:0;">₹${opt.cost}Cr extra</span>` : '<span class="tag tag-emerald" style="flex-shrink:0;">No cost</span>'}
-              </div>
-            </div>`).join('')}
+                ${isSelected ? '<div style="font-size:11px;color:#6366f1;margin-top:8px;font-weight:600;">▶ Selected — answer the questions below to confirm</div>' : ''}
+              </div>`;
+          }).join('')}
         </div>
 
-        <button class="btn-primary w-full text-base mt-6" onclick="BPZ.resolveEvent()"
-          ${!BPZ.state.eventResponse ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>
-          Confirm Response & See Results
-        </button>
+        ${pending ? `
+          <!-- Scenario Preview -->
+          ${previewSection}
+
+          <!-- Rationale Gate -->
+          ${showQ1 ? renderRationaleQ(1) : ''}
+          ${showQ2 ? renderRationaleQ(2) : ''}
+
+          <!-- Lock In Button -->
+          ${effectiveShowLock ? `
+            <div style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.25);border-radius:14px;padding:16px 20px;margin-bottom:16px;text-align:center;">
+              <div style="font-size:13px;color:var(--text-sub);margin-bottom:4px;">Rationale score: <strong style="color:#818cf8;">${BPZ.state.rationaleScore}/2</strong></div>
+              <div style="font-size:11px;color:var(--muted);">${BPZ.state.rationaleScore === 2 ? '🎯 Perfect strategic thinking!' : BPZ.state.rationaleScore === 1 ? '👍 Good — one insight missed. Review before locking in.' : '📚 Study the insights above before your next decision.'}</div>
+            </div>
+            <button class="btn-primary w-full text-base" onclick="BPZ.confirmEventDecision()">
+              🔒 Lock In Decision: "${pending.label}" → See Year ${BPZ.state.currentYear} Results
+            </button>` : ''}
+        ` : `
+          <div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">
+            ☝️ Select a response above to see your scenario preview and strategic questions.
+          </div>`}
       </div>
     </div>`;
 };
@@ -812,8 +993,8 @@ BPZ.ui.dashboard = function() {
             <button class="btn-primary text-base flex-1" onclick="BPZ.navigate('final-report')">
               🏆 View Final Report
             </button>` : `
-            <button class="btn-primary text-base flex-1" onclick="BPZ.startNextYear()">
-              ▶ Continue to Year ${year + 1}
+            <button class="btn-primary text-base flex-1" onclick="BPZ.startDebrief()">
+              🧠 Reflect & Continue to Year ${year + 1}
             </button>`}
           <button class="btn-secondary" onclick="BPZ.navigate('landing')">
             Start New Game
@@ -1051,6 +1232,137 @@ BPZ.ui.caseStudy = function() {
           <button class="btn-primary" onclick="BPZ.navigate('setup-player')">Apply in Simulation →</button>
           <button class="btn-secondary" onclick="BPZ.navigate('learn-hub')">Back to Learn Hub</button>
         </div>
+      </div>
+    </div>`;
+};
+
+// ════════════════════════════════════════════════════════════
+//  DEBRIEF QUESTIONS (post-year Socratic reflection)
+// ════════════════════════════════════════════════════════════
+BPZ.ui.debriefQuestions = function() {
+  const year      = BPZ.state.currentYear;
+  const questions = BPZ.state.debriefQuestions;
+  const step      = BPZ.state.debriefStep;
+  const done      = BPZ.state.debriefDone;
+  const lastAns   = BPZ.state.debriefLastAnswer;
+  const score     = BPZ.state.debriefScore;
+  const m         = BPZ.state.metrics;
+
+  // No questions fallback
+  if (!questions || questions.length === 0) {
+    BPZ.completeDebrief();
+    return '';
+  }
+
+  const q = questions[step] || questions[0];
+  const totalQ = questions.length;
+
+  const gradeColor = { A:'#10b981', B:'#22d3ee', C:'#f59e0b', D:'#f59e0b', F:'#f43f5e' };
+  const grade      = BPZ.engine.getGrade(m.brandEquityIndex, m.marketShare);
+
+  // Score badge colour
+  const scoreCol = score === totalQ ? '#10b981' : score === 0 ? '#f43f5e' : '#f59e0b';
+
+  // Render single question (pre-answer)
+  function renderQuestion(qObj) {
+    return `
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px;">
+        <div style="font-size:11px;font-weight:700;color:#818cf8;letter-spacing:0.07em;margin-bottom:12px;">
+          QUESTION ${step + 1} OF ${totalQ}
+        </div>
+        <p style="font-size:16px;font-weight:600;color:var(--text);line-height:1.6;margin-bottom:20px;">${qObj.text}</p>
+        <div class="grid grid-cols-1 gap-3">
+          ${(qObj.options || []).map(opt => `
+            <div style="background:var(--elevated);border:1px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:border-color 0.2s;"
+              onmouseover="this.style.borderColor='#6366f1'" onmouseout="this.style.borderColor='var(--border)'"
+              onclick="BPZ.answerDebrief('${opt.id}')">
+              <span style="font-size:14px;color:var(--text);">${opt.text}</span>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  // Render answered state (with feedback)
+  function renderAnswered(qObj, ans) {
+    if (!ans) return renderQuestion(qObj);
+    return `
+      <div style="background:var(--card);border:1px solid ${ans.correct ? 'rgba(16,185,129,0.5)' : 'rgba(244,63,94,0.4)'};border-radius:16px;padding:24px;margin-bottom:20px;">
+        <div style="font-size:11px;font-weight:700;color:#818cf8;letter-spacing:0.07em;margin-bottom:12px;">
+          QUESTION ${step + 1} OF ${totalQ}
+        </div>
+        <p style="font-size:16px;font-weight:600;color:var(--text);line-height:1.6;margin-bottom:16px;">${qObj.text}</p>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:10px 14px;border-radius:10px;background:${ans.correct ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)'};">
+          <span style="font-size:20px;">${ans.correct ? '🎯' : '📚'}</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:${ans.correct ? '#10b981' : '#f43f5e'};">${ans.correct ? 'Correct!' : 'Not quite — here\'s the insight:'}</div>
+          </div>
+        </div>
+        <div style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+          <span style="font-size:12px;color:#818cf8;font-weight:600;">💡 Key Insight: </span>
+          <span style="font-size:13px;color:var(--text-sub);line-height:1.6;">${qObj.insight || 'Keep analysing your results to build pattern recognition.'}</span>
+        </div>
+        ${!done ? `
+          <button class="btn-primary w-full" onclick="BPZ.nextDebriefQuestion()">
+            Next Question →
+          </button>` : ''}
+      </div>`;
+  }
+
+  // Done state
+  const doneSection = done ? `
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;text-align:center;margin-bottom:24px;">
+      <div style="font-size:48px;margin-bottom:12px;">${score === totalQ ? '🧠' : score > 0 ? '📈' : '📚'}</div>
+      <div style="font-size:22px;font-weight:800;font-family:'Space Grotesk',sans-serif;color:${scoreCol};margin-bottom:6px;">${score}/${totalQ} correct</div>
+      <p style="font-size:14px;color:var(--text-sub);margin-bottom:0;">
+        ${score === totalQ
+          ? 'Sharp strategic thinking. You\'re diagnosing your brand like a pro.'
+          : score > 0
+          ? 'Good effort. Re-read the insights above before making Year ' + (year + 1) + ' decisions.'
+          : 'Study the insights carefully — they point directly at what to fix next year.'}
+      </p>
+    </div>
+    <button class="btn-primary w-full text-base" onclick="BPZ.completeDebrief()">
+      ${year >= BPZ.state.maxYears ? '🏆 View Final Report' : `▶ Set Year ${year + 1} Mix & Continue`}
+    </button>` : '';
+
+  return `
+    <div style="min-height:100vh;background:var(--bg);">
+      ${renderNav(`Year ${year} Debrief`)}
+      <div style="max-width:640px;margin:0 auto;padding:40px 24px;">
+
+        <!-- Header -->
+        <div style="text-align:center;margin-bottom:32px;">
+          <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:0.1em;margin-bottom:8px;">YEAR ${year} DEBRIEF</div>
+          <h1 class="font-display font-bold text-2xl mb-2">Reflect Before You Move On</h1>
+          <p style="font-size:13px;color:var(--text-sub);">Answer these Socratic questions to sharpen your strategic thinking. No googling — trust your instincts and the data you just saw.</p>
+        </div>
+
+        <!-- Performance snapshot -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:28px;">
+          ${[
+            { label:'Share',    val: m.marketShare + '%',          col:'#22d3ee' },
+            { label:'Awareness',val: m.awareness + '%',            col:'#6366f1' },
+            { label:'Equity',   val: m.brandEquityIndex + '/100',  col:'#f59e0b' },
+            { label:'Grade',    val: grade.letter,                  col: gradeColor[grade.letter] || '#94a3b8' },
+          ].map(k => `
+            <div style="text-align:center;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;">
+              <div style="font-size:18px;font-weight:800;font-family:'Space Grotesk',sans-serif;color:${k.col};">${k.val}</div>
+              <div style="font-size:10px;color:var(--muted);">${k.label}</div>
+            </div>`).join('')}
+        </div>
+
+        <!-- Question or Done state -->
+        ${done
+          ? doneSection
+          : (lastAns ? renderAnswered(q, lastAns) : renderQuestion(q))
+        }
+
+        ${!done ? `
+          <div style="text-align:center;margin-top:16px;">
+            <button class="btn-ghost text-sm" onclick="BPZ.completeDebrief()" style="font-size:12px;color:var(--muted);">
+              Skip reflection →
+            </button>
+          </div>` : ''}
       </div>
     </div>`;
 };
