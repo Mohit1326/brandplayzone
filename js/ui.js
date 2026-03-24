@@ -119,7 +119,7 @@ BPZ.ui.landing = function() {
         </div>
 
         <!-- Stats bar -->
-        <div style="border:1px solid var(--border);border-radius:14px;padding:20px 32px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;text-align:center;background:var(--surface);">
+        <div style="border:1px solid var(--border);border-radius:14px;padding:20px 32px;display:grid;grid-template-columns:repeat(5,1fr);gap:16px;text-align:center;background:var(--surface);">
           <div>
             <div class="font-display font-bold text-2xl grad-text">3</div>
             <div style="font-size:12px;color:var(--muted);">Simulation Years</div>
@@ -129,12 +129,16 @@ BPZ.ui.landing = function() {
             <div style="font-size:12px;color:var(--muted);">Consumer Segments</div>
           </div>
           <div>
-            <div class="font-display font-bold text-2xl grad-text">6</div>
-            <div style="font-size:12px;color:var(--muted);">Sales Channels</div>
+            <div class="font-display font-bold text-2xl grad-text">20</div>
+            <div style="font-size:12px;color:var(--muted);">Market Events</div>
           </div>
           <div>
-            <div class="font-display font-bold text-2xl grad-text">10</div>
-            <div style="font-size:12px;color:var(--muted);">Market Events</div>
+            <div class="font-display font-bold text-2xl grad-text">18</div>
+            <div style="font-size:12px;color:var(--muted);">Value Chain Cases</div>
+          </div>
+          <div>
+            <div class="font-display font-bold text-2xl grad-text">6</div>
+            <div style="font-size:12px;color:var(--muted);">Sales Channels</div>
           </div>
         </div>
       </div>
@@ -1097,6 +1101,36 @@ BPZ.ui.learnHub = function() {
           </div>
         </div>
 
+        <!-- Value Chain Vault -->
+        <div style="margin-bottom:48px;">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+            <div style="font-size:13px;font-weight:700;color:var(--muted);letter-spacing:0.06em;">VALUE CHAIN VAULT</div>
+            <span class="tag tag-amber">18 Cases</span>
+            <span class="tag tag-amber">6 Pillars</span>
+          </div>
+
+          <!-- Vault hero card -->
+          <div class="card-hover" onclick="BPZ.navigate('value-chain')"
+            style="background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(244,63,94,0.06));border:1px solid rgba(245,158,11,0.25);border-radius:16px;padding:24px 28px;cursor:pointer;margin-bottom:16px;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#f59e0b,#f43f5e,#818cf8);"></div>
+            <div style="display:flex;align-items:center;gap:16px;">
+              <div style="font-size:44px;">⛓️</div>
+              <div style="flex:1;">
+                <div class="font-display font-bold text-xl mb-1">Win Across the Full Value Chain</div>
+                <p style="font-size:13px;color:var(--text-sub);line-height:1.6;margin-bottom:12px;">Deep-dive cases across Product, Packaging, Retail, Communication, Consumer Value, and Customer Value. Each case includes what they did, why it worked, the trade-off they made, and exactly how it maps to your simulation decisions.</p>
+                <div class="flex flex-wrap gap-2">
+                  ${(BPZ.data.valueChainPillars || []).map(p => `
+                    <div style="display:inline-flex;align-items:center;gap:5px;background:${p.colourBg};border:1px solid ${p.colourBorder};border-radius:12px;padding:4px 10px;">
+                      <span style="font-size:12px;">${p.icon}</span>
+                      <span style="font-size:11px;font-weight:600;color:${p.colour};">${p.label}</span>
+                    </div>`).join('')}
+                </div>
+              </div>
+              <button class="btn-primary" style="flex-shrink:0;white-space:nowrap;">Explore Vault →</button>
+            </div>
+          </div>
+        </div>
+
         <!-- Mishap Vault -->
         <div>
           <div style="display:flex;align-items:center;gap-10px;margin-bottom:16px;">
@@ -1363,6 +1397,201 @@ BPZ.ui.debriefQuestions = function() {
               Skip reflection →
             </button>
           </div>` : ''}
+      </div>
+    </div>`;
+};
+
+// ════════════════════════════════════════════════════════════
+//  VALUE CHAIN VAULT — PILLAR HUB
+// ════════════════════════════════════════════════════════════
+BPZ.ui.valueChain = function() {
+  const pillars      = BPZ.data.valueChainPillars;
+  const cases        = BPZ.data.valueChainCases;
+  const activePillar = BPZ.state.valueChainPillar;
+  const filtered     = activePillar ? cases.filter(c => c.pillar === activePillar) : cases;
+  const pillar       = activePillar ? pillars.find(p => p.id === activePillar) : null;
+
+  return `
+    <div style="min-height:100vh;background:var(--bg);">
+      ${renderNav('Value Chain Vault')}
+      <div style="max-width:1100px;margin:0 auto;padding:48px 24px;">
+
+        <button class="btn-ghost mb-6" onclick="BPZ.navigate('learn-hub')" style="display:flex;align-items:center;gap:6px;padding-left:0;">← Back to Learn Hub</button>
+
+        <div class="mb-10">
+          <div class="tag tag-amber mb-3">Value Chain Vault</div>
+          <h1 class="font-display font-bold text-4xl mb-3">Win Across the Full Value Chain</h1>
+          <p style="color:var(--text-sub);font-size:16px;max-width:640px;">Real brand cases across the 6 levers that determine FMCG success — from product formulation to trade partnerships. Study each pillar. Apply the lesson in your simulation.</p>
+        </div>
+
+        <!-- Pillar filter strip -->
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:32px;">
+          <div class="selectable ${!activePillar ? 'selected' : ''}"
+            style="border-radius:20px;padding:8px 16px;font-size:13px;font-weight:600;"
+            onclick="BPZ.state.valueChainPillar=null;BPZ.render();">
+            All Pillars (${cases.length})
+          </div>
+          ${pillars.map(p => `
+            <div class="selectable ${activePillar === p.id ? 'selected' : ''}"
+              style="border-radius:20px;padding:8px 16px;font-size:13px;font-weight:600;"
+              onclick="BPZ.state.valueChainPillar='${p.id}';BPZ.render();">
+              ${p.icon} ${p.label}
+            </div>`).join('')}
+        </div>
+
+        <!-- Active pillar description -->
+        ${pillar ? `
+          <div style="background:${pillar.colourBg};border:1px solid ${pillar.colourBorder};border-radius:14px;padding:18px 24px;margin-bottom:28px;display:flex;align-items:center;gap:16px;">
+            <div style="font-size:36px;flex-shrink:0;">${pillar.icon}</div>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:${pillar.colour};letter-spacing:0.06em;margin-bottom:4px;">${pillar.label.toUpperCase()}</div>
+              <p style="font-size:14px;color:var(--text-sub);margin:0;line-height:1.6;">${pillar.description}</p>
+            </div>
+          </div>` : `
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10">
+            ${pillars.map(p => {
+              const count = cases.filter(c => c.pillar === p.id).length;
+              return `
+                <div class="card-hover" style="background:${p.colourBg};border:1px solid ${p.colourBorder};border-radius:14px;padding:20px;cursor:pointer;"
+                  onclick="BPZ.state.valueChainPillar='${p.id}';BPZ.render();">
+                  <div style="font-size:28px;margin-bottom:10px;">${p.icon}</div>
+                  <div style="font-weight:700;font-size:13px;color:${p.colour};margin-bottom:6px;">${p.label}</div>
+                  <p style="font-size:12px;color:var(--text-sub);line-height:1.5;margin-bottom:10px;">${p.description}</p>
+                  <span style="font-size:11px;color:${p.colour};font-weight:600;">${count} cases →</span>
+                </div>`;
+            }).join('')}
+          </div>`}
+
+        <!-- Cases grid -->
+        <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:16px;">
+          ${activePillar && pillar ? `${filtered.length} CASES — ${pillar.label.toUpperCase()}` : `ALL ${filtered.length} CASES`}
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          ${filtered.map(c => {
+            const p = pillars.find(pl => pl.id === c.pillar);
+            return `
+              <div class="card-hover" style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;"
+                onclick="BPZ.navigate('value-chain-case', {valueChainCaseId: '${c.id}'})">
+                <div style="display:flex;align-items:start;gap:14px;">
+                  <div style="font-size:32px;flex-shrink:0;">${c.icon}</div>
+                  <div style="flex:1;">
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+                      ${p ? `<span style="font-size:11px;font-weight:700;color:${p.colour};">${p.icon} ${p.label}</span>` : ''}
+                      <span style="font-size:11px;color:var(--muted);">· ${c.brand} · ${c.year}</span>
+                    </div>
+                    <div class="font-semibold text-sm mb-2">${c.headline}</div>
+                    <p style="font-size:12px;color:var(--text-sub);line-height:1.5;margin-bottom:10px;">${c.summary.substring(0, 110)}...</p>
+                    <div class="flex flex-wrap gap-1">
+                      ${c.tags.map(t => `<span class="tag tag-${c.tagColour}" style="font-size:10px;">${t}</span>`).join('')}
+                    </div>
+                  </div>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`;
+};
+
+// ════════════════════════════════════════════════════════════
+//  VALUE CHAIN VAULT — CASE DETAIL
+// ════════════════════════════════════════════════════════════
+BPZ.ui.valueChainCase = function() {
+  const c = BPZ.data.valueChainCases.find(x => x.id === BPZ.state.valueChainCaseId);
+  if (!c) return BPZ.ui.valueChain();
+  const pillar = BPZ.data.valueChainPillars.find(p => p.id === c.pillar);
+
+  return `
+    <div style="min-height:100vh;background:var(--bg);">
+      ${renderNav('Value Chain Vault')}
+      <div style="max-width:760px;margin:0 auto;padding:48px 24px;">
+
+        <button class="btn-ghost mb-6" onclick="BPZ.navigate('value-chain', {valueChainPillar: '${c.pillar}'})" style="display:flex;align-items:center;gap:6px;padding-left:0;">← Back to ${pillar ? pillar.label : 'Value Chain Vault'}</button>
+
+        <!-- Header -->
+        <div style="display:flex;align-items:start;gap:18px;margin-bottom:24px;">
+          <div style="font-size:52px;flex-shrink:0;">${c.icon}</div>
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+              ${pillar ? `
+                <div style="display:inline-flex;align-items:center;gap:6px;background:${pillar.colourBg};border:1px solid ${pillar.colourBorder};border-radius:20px;padding:4px 12px;">
+                  <span style="font-size:13px;">${pillar.icon}</span>
+                  <span style="font-size:11px;font-weight:700;color:${pillar.colour};">${pillar.label}</span>
+                </div>` : ''}
+              <span style="font-size:12px;color:var(--muted);">${c.brand} · ${c.year}</span>
+            </div>
+            <h1 class="font-display font-bold text-3xl leading-tight">${c.headline}</h1>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-2 mb-6">
+          ${c.tags.map(t => `<span class="tag tag-${c.tagColour}">${t}</span>`).join('')}
+        </div>
+
+        <p style="font-size:15px;color:var(--text-sub);line-height:1.8;margin-bottom:32px;">${c.summary}</p>
+
+        <!-- 4-section deep dive -->
+        <div class="grid grid-cols-1 gap-5 mb-8">
+
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;">
+            <div style="font-size:11px;font-weight:700;color:#22d3ee;letter-spacing:0.06em;margin-bottom:12px;">🔍 WHAT THEY DID</div>
+            <p style="font-size:14px;color:var(--text-sub);line-height:1.8;margin:0;">${c.whatTheyDid}</p>
+          </div>
+
+          <div style="background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.2);border-radius:16px;padding:24px;">
+            <div style="font-size:11px;font-weight:700;color:#6ee7b7;letter-spacing:0.06em;margin-bottom:12px;">✅ WHY IT WORKED</div>
+            <p style="font-size:14px;color:var(--text-sub);line-height:1.8;margin:0;">${c.whyItWorked}</p>
+          </div>
+
+          <div style="background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.2);border-radius:16px;padding:24px;">
+            <div style="font-size:11px;font-weight:700;color:#fcd34d;letter-spacing:0.06em;margin-bottom:12px;">⚖️ THE TRADE-OFF</div>
+            <p style="font-size:14px;color:var(--text-sub);line-height:1.8;margin:0;">${c.tradeOff}</p>
+          </div>
+
+          <div style="background:rgba(99,102,241,0.07);border:1px solid rgba(99,102,241,0.25);border-radius:16px;padding:24px;">
+            <div style="font-size:11px;font-weight:700;color:#818cf8;letter-spacing:0.06em;margin-bottom:12px;">🎮 IN YOUR SIMULATION</div>
+            <p style="font-size:14px;color:var(--text-sub);line-height:1.8;margin:0;">${c.simulationLink}</p>
+          </div>
+        </div>
+
+        <!-- Metrics -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:32px;">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.05em;margin-bottom:14px;">📊 BY THE NUMBERS</div>
+          <div class="grid grid-cols-3 gap-4">
+            ${Object.entries(c.metrics).map(([k, v]) => `
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.4;">${v}</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:3px;">${k.replace(/([A-Z])/g, ' $1').trim()}</div>
+              </div>`).join('')}
+          </div>
+        </div>
+
+        <!-- More from same pillar -->
+        ${(() => {
+          const more = BPZ.data.valueChainCases.filter(x => x.pillar === c.pillar && x.id !== c.id);
+          if (!more.length) return '';
+          return `
+            <div style="margin-bottom:32px;">
+              <div style="font-size:12px;font-weight:700;color:var(--muted);letter-spacing:0.05em;margin-bottom:12px;">MORE FROM ${pillar ? pillar.label.toUpperCase() : 'THIS PILLAR'}</div>
+              <div class="grid grid-cols-1 gap-3">
+                ${more.map(x => `
+                  <div class="card-hover" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;"
+                    onclick="BPZ.navigate('value-chain-case', {valueChainCaseId: '${x.id}'})">
+                    <span style="font-size:24px;">${x.icon}</span>
+                    <div style="flex:1;">
+                      <div style="font-weight:600;font-size:13px;">${x.brand}</div>
+                      <div style="font-size:12px;color:var(--text-sub);">${x.headline}</div>
+                    </div>
+                    <span style="font-size:14px;color:var(--muted);">→</span>
+                  </div>`).join('')}
+              </div>
+            </div>`;
+        })()}
+
+        <div class="flex gap-4">
+          <button class="btn-primary" onclick="BPZ.navigate('setup-player')">Apply in Simulation →</button>
+          <button class="btn-secondary" onclick="BPZ.navigate('value-chain', {valueChainPillar: '${c.pillar}'})">Back to ${pillar ? pillar.label : 'Vault'}</button>
+        </div>
       </div>
     </div>`;
 };

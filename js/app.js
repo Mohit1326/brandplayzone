@@ -45,6 +45,10 @@ BPZ.state = {
 
   // ── PER-YEAR MIX MEMORY ──────────────────────────────────
   mixPerYear: {},                // { 1: {tv,digital,trade,pr}, 2: {...} }
+
+  // ── VALUE CHAIN VAULT ────────────────────────────────────
+  valueChainPillar: null,        // currently viewed pillar id
+  valueChainCaseId: null,        // currently viewed case id
 };
 
 // ── ROUTER ──────────────────────────────────────────────────
@@ -71,6 +75,8 @@ BPZ.render = function() {
     'learn-topic':       BPZ.ui.learnTopic,
     'case-study':        BPZ.ui.caseStudy,
     'debrief-questions': BPZ.ui.debriefQuestions,
+    'value-chain':       BPZ.ui.valueChain,
+    'value-chain-case':  BPZ.ui.valueChainCase,
   };
   const fn  = views[BPZ.state.screen];
   const app = document.getElementById('app');
@@ -332,6 +338,7 @@ BPZ.resetGame = function() {
     debriefQuestions: [], debriefStep: 0,
     debriefScore: 0, debriefDone: false, debriefLastAnswer: null,
     mixPerYear: {},
+    valueChainPillar: null, valueChainCaseId: null,
   };
   BPZ.navigate('landing');
 };
