@@ -20,7 +20,7 @@ function renderNav(subtitle) {
       </div>
       <div class="flex items-center gap-3">
         ${year}
-        <button class="btn-ghost text-sm" onclick="BPZ.navigate('learn-hub')">Learn Hub</button>
+        <button class="btn-ghost text-sm" onclick="BPZ.navigate('market-select')">Learn Hub</button>
         ${BPZ.state.currentYear > 0 ? `<button class="btn-ghost text-sm" onclick="BPZ.navigate('dashboard')">Dashboard</button>` : ''}
       </div>
     </nav>`;
@@ -97,7 +97,7 @@ BPZ.ui.landing = function() {
               <span class="tag tag-cyan">6 Case Studies</span>
               <span class="tag tag-cyan">Real Brands</span>
             </div>
-            <button class="btn-secondary w-full" style="color:#22d3ee;border-color:rgba(34,211,238,0.3);">Enter Learn Hub →</button>
+            <button class="btn-secondary w-full" style="color:#22d3ee;border-color:rgba(34,211,238,0.3);" onclick="BPZ.navigate('market-select')">Choose Market →</button>
           </div>
 
           <!-- PLAY -->
@@ -1623,6 +1623,366 @@ BPZ.ui.valueChainCase = function() {
           <button class="btn-primary" onclick="BPZ.navigate('setup-player')">Apply in Simulation →</button>
           <button class="btn-secondary" onclick="BPZ.navigate('value-chain', {valueChainPillar: '${c.pillar}'})">Back to ${pillar ? pillar.label : 'Vault'}</button>
         </div>
+      </div>
+    </div>`;
+};
+
+// ════════════════════════════════════════════════════════════
+//  CHART INITIALISATION (called after dashboard renders)
+// ════════════════════════════════════════════════════════════
+//  MARKET SELECT
+// ════════════════════════════════════════════════════════════
+BPZ.ui.marketSelect = function() {
+  return `
+    <div style="min-height:100vh;background:var(--bg);">
+      ${renderNav('Choose Market')}
+      <div style="max-width:900px;margin:0 auto;padding:60px 24px;">
+
+        <div class="text-center mb-12">
+          <div class="inline-flex items-center gap-2 mb-5" style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);border-radius:24px;padding:6px 16px;">
+            <div class="pulse-dot"></div>
+            <span style="font-size:13px;color:#818cf8;font-weight:500;">Personal Care · FMCG</span>
+          </div>
+          <h1 class="font-display font-bold text-4xl mb-3">Choose Your Market</h1>
+          <p style="color:var(--text-sub);font-size:16px;">Two of the world's most dynamic Personal Care markets. Different consumers, different channels, different winning strategies.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+
+          <!-- INDIA -->
+          <div style="background:var(--card);border:2px solid rgba(99,102,241,0.4);border-radius:20px;padding:32px;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;"
+            onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 20px 48px rgba(99,102,241,0.2)'"
+            onmouseout="this.style.transform='';this.style.boxShadow=''"
+            onclick="BPZ.state.world.country='India';BPZ.navigate('learn-hub')">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+              <div style="font-size:48px;line-height:1;">🇮🇳</div>
+              <div>
+                <h2 class="font-display font-bold text-2xl">India</h2>
+                <div style="font-size:13px;color:#818cf8;font-weight:500;">Personal Care Market</div>
+              </div>
+            </div>
+            <div style="margin-bottom:18px;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                <span style="font-size:13px;color:var(--text-sub);">Market Size</span>
+                <span style="font-size:13px;font-weight:600;color:var(--text);">₹22,000 Crore+</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                <span style="font-size:13px;color:var(--text-sub);">CAGR</span>
+                <span style="font-size:13px;font-weight:600;color:#10b981;">8.4%</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                <span style="font-size:13px;color:var(--text-sub);">Channels</span>
+                <span style="font-size:13px;font-weight:600;color:var(--text);">Kirana · MT · D2C · Q-comm</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span style="font-size:13px;color:var(--text-sub);">Key players</span>
+                <span style="font-size:13px;font-weight:600;color:var(--text);">HUL, Marico, Patanjali, D2C</span>
+              </div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px;">
+              <span class="tag tag-indigo">Full Simulation</span>
+              <span class="tag tag-emerald">Learn Hub</span>
+              <span class="tag tag-cyan">6 Topics</span>
+              <span class="tag tag-amber">18 Cases</span>
+            </div>
+            <button class="btn-primary w-full" style="font-size:14px;">Enter India Market →</button>
+          </div>
+
+          <!-- SOUTH KOREA -->
+          <div style="background:var(--card);border:2px solid rgba(244,63,94,0.35);border-radius:20px;padding:32px;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;"
+            onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 20px 48px rgba(244,63,94,0.15)'"
+            onmouseout="this.style.transform='';this.style.boxShadow=''"
+            onclick="BPZ.state.world.country='South Korea';BPZ.navigate('learn-hub-korea')">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+              <div style="font-size:48px;line-height:1;">🇰🇷</div>
+              <div>
+                <h2 class="font-display font-bold text-2xl">South Korea</h2>
+                <div style="font-size:13px;color:#f43f5e;font-weight:500;">K-Beauty Market</div>
+              </div>
+            </div>
+            <div style="margin-bottom:18px;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                <span style="font-size:13px;color:var(--text-sub);">Market Size</span>
+                <span style="font-size:13px;font-weight:600;color:var(--text);">₩14 Trillion (~₹87,000 Cr)</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                <span style="font-size:13px;color:var(--text-sub);">CAGR</span>
+                <span style="font-size:13px;font-weight:600;color:#10b981;">6.2%</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                <span style="font-size:13px;color:var(--text-sub);">Channels</span>
+                <span style="font-size:13px;font-weight:600;color:var(--text);">Olive Young · Coupang · Naver</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span style="font-size:13px;color:var(--text-sub);">Key players</span>
+                <span style="font-size:13px;font-weight:600;color:var(--text);">Amorepacific, LG H&H, COSRX</span>
+              </div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px;">
+              <span style="background:rgba(244,63,94,0.12);color:#fca5a5;border:1px solid rgba(244,63,94,0.2);display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;">🔜 Simulation coming soon</span>
+              <span class="tag tag-emerald">Learn Hub</span>
+              <span class="tag tag-cyan">6 Topics</span>
+              <span class="tag tag-rose">6 Case Studies</span>
+            </div>
+            <button class="btn-primary w-full" style="font-size:14px;background:linear-gradient(135deg,#f43f5e,#e11d48);">Enter Korea Market →</button>
+          </div>
+
+        </div>
+
+        <div class="text-center">
+          <button class="btn-ghost" onclick="BPZ.navigate('landing')" style="font-size:13px;">← Back to Home</button>
+        </div>
+
+      </div>
+    </div>`;
+};
+
+// ════════════════════════════════════════════════════════════
+//  LEARN HUB — KOREA
+// ════════════════════════════════════════════════════════════
+BPZ.ui.learnHubKorea = function() {
+  const km  = BPZ.data.koreaMarket;
+  const topics = BPZ.data.koreaLearnTopics;
+  const cases  = BPZ.data.koreaCaseStudies;
+
+  const tagColMap = {
+    'Category Insight': 'tag-emerald',
+    'Trend':           'tag-cyan',
+    'Distribution':    'tag-amber',
+    'Brand Strategy':  'tag-indigo',
+    'Digital Commerce':'tag-cyan',
+    'Global Strategy': 'tag-rose',
+    'Product':         'tag-emerald',
+    'Innovation':      'tag-cyan',
+    'Brand Architecture':'tag-indigo',
+    'Premium Positioning':'tag-indigo',
+    'D2C / Community': 'tag-amber',
+  };
+
+  return `
+    <div style="min-height:100vh;background:var(--bg);">
+      ${renderNav('Korea Learn Hub')}
+      <div style="max-width:1100px;margin:0 auto;padding:48px 24px;">
+
+        <!-- Korea Header -->
+        <div style="background:linear-gradient(135deg,rgba(244,63,94,0.12),rgba(251,113,133,0.06));border:1px solid rgba(244,63,94,0.25);border-radius:20px;padding:32px;margin-bottom:40px;">
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+            <div style="font-size:52px;">🇰🇷</div>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:#f43f5e;letter-spacing:0.08em;margin-bottom:4px;">MARKET CONTEXT</div>
+              <h1 class="font-display font-bold text-3xl">${km.name} · ${km.category}</h1>
+              <div style="font-size:14px;color:var(--text-sub);margin-top:4px;">${km.marketSize} · ${km.growth}</div>
+            </div>
+          </div>
+          <p style="font-size:15px;color:var(--text-sub);line-height:1.7;margin-bottom:20px;max-width:720px;">${km.context}</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            ${km.keyFacts.map(f => `
+              <div style="display:flex;align-items:start;gap:8px;">
+                <span style="color:#f43f5e;flex-shrink:0;margin-top:2px;">▸</span>
+                <span style="font-size:13px;color:var(--text-sub);line-height:1.5;">${f}</span>
+              </div>`).join('')}
+          </div>
+        </div>
+
+        <!-- Market Switch -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:12px;">
+          <h2 class="font-display font-bold text-xl">K-Beauty Learning Library</h2>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-secondary" style="font-size:13px;padding:8px 16px;" onclick="BPZ.navigate('market-select')">🌏 Switch Market</button>
+            <button class="btn-secondary" style="font-size:13px;padding:8px 16px;" onclick="BPZ.state.world.country='India';BPZ.navigate('learn-hub')">🇮🇳 India Hub</button>
+          </div>
+        </div>
+
+        <!-- Topics -->
+        <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.07em;margin-bottom:16px;">📖 STRATEGY TOPICS</div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
+          ${topics.map(t => `
+            <div class="card-hover" onclick="BPZ.navigate('learn-topic-korea',{topicId:'${t.id}'})"
+              style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;cursor:pointer;">
+              <div style="font-size:32px;margin-bottom:12px;">${t.icon}</div>
+              <div class="flex items-center gap-2 mb-2">
+                <span class="tag ${tagColMap[t.tag] || 'tag-indigo'}">${t.tag}</span>
+                <span style="font-size:11px;color:var(--muted);">${t.duration}</span>
+              </div>
+              <h3 class="font-display font-semibold text-base mb-2 leading-tight">${t.title}</h3>
+              <p style="font-size:13px;color:var(--text-sub);line-height:1.6;margin:0;">${t.summary}</p>
+            </div>`).join('')}
+        </div>
+
+        <!-- Case Studies -->
+        <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.07em;margin-bottom:16px;">🏆 BRAND CASE STUDIES</div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          ${cases.map(c => `
+            <div class="card-hover" onclick="BPZ.navigate('case-study-korea',{caseId:'${c.id}'})"
+              style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;cursor:pointer;display:flex;gap:16px;align-items:start;">
+              <div style="font-size:36px;flex-shrink:0;line-height:1;margin-top:2px;">${c.icon}</div>
+              <div style="flex:1;min-width:0;">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="tag ${tagColMap[c.tag] || 'tag-indigo'}">${c.tag}</span>
+                  <span style="font-size:11px;color:var(--muted);">${c.category}</span>
+                </div>
+                <h3 class="font-display font-semibold text-sm leading-snug mb-1">${c.title}</h3>
+                <p style="font-size:12px;color:var(--muted);margin:0;line-height:1.5;">${c.outcome}</p>
+              </div>
+            </div>`).join('')}
+        </div>
+
+      </div>
+    </div>`;
+};
+
+// ════════════════════════════════════════════════════════════
+//  LEARN TOPIC — KOREA
+// ════════════════════════════════════════════════════════════
+BPZ.ui.learnTopicKorea = function() {
+  const topic = BPZ.data.koreaLearnTopics.find(t => t.id === BPZ.state.topicId);
+  if (!topic) { BPZ.navigate('learn-hub-korea'); return ''; }
+  const tagColMap = { emerald:'tag-emerald', cyan:'tag-cyan', amber:'tag-amber', indigo:'tag-indigo', rose:'tag-rose' };
+  const tc = tagColMap[topic.tagColour] || 'tag-indigo';
+  const idx = BPZ.data.koreaLearnTopics.findIndex(t => t.id === topic.id);
+  const next = BPZ.data.koreaLearnTopics[idx + 1] || null;
+
+  return `
+    <div style="min-height:100vh;background:var(--bg);">
+      ${renderNav('Korea · ' + topic.tag)}
+      <div style="max-width:720px;margin:0 auto;padding:48px 24px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:24px;">
+          <button class="btn-ghost" style="font-size:13px;padding:6px 12px;" onclick="BPZ.navigate('learn-hub-korea')">← Korea Hub</button>
+          <span style="color:var(--border);">/</span>
+          <span style="font-size:13px;color:var(--muted);">${topic.title}</span>
+        </div>
+
+        <div style="font-size:52px;margin-bottom:16px;">${topic.icon}</div>
+        <div class="flex items-center gap-3 mb-4">
+          <span class="tag ${tc}">${topic.tag}</span>
+          <span style="font-size:12px;color:var(--muted);">🇰🇷 South Korea · ${topic.duration}</span>
+        </div>
+        <h1 class="font-display font-bold text-3xl mb-4 leading-tight">${topic.title}</h1>
+        <p style="font-size:16px;color:var(--text-sub);line-height:1.7;margin-bottom:32px;">${topic.summary}</p>
+
+        <!-- Key points -->
+        <div style="background:rgba(244,63,94,0.07);border:1px solid rgba(244,63,94,0.2);border-radius:14px;padding:22px 24px;margin-bottom:28px;">
+          <div style="font-size:11px;font-weight:700;color:#f43f5e;letter-spacing:0.06em;margin-bottom:14px;">🎯 KEY LEARNING POINTS</div>
+          ${topic.keyPoints.map(kp => `
+            <div style="display:flex;align-items:start;gap:10px;margin-bottom:10px;">
+              <span style="color:#f43f5e;flex-shrink:0;font-weight:700;margin-top:1px;">▸</span>
+              <p style="font-size:14px;color:var(--text-sub);margin:0;line-height:1.6;">${kp}</p>
+            </div>`).join('')}
+        </div>
+
+        <!-- Body -->
+        <div style="margin-bottom:32px;">
+          ${topic.body.split('\n\n').map(para => `
+            <p style="font-size:15px;color:var(--text-sub);line-height:1.8;margin-bottom:16px;">${para}</p>`).join('')}
+        </div>
+
+        <!-- Navigation -->
+        <div style="display:flex;gap-0;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid var(--border);">
+          <button class="btn-secondary" onclick="BPZ.navigate('learn-hub-korea')" style="font-size:14px;">← All Topics</button>
+          ${next ? `<button class="btn-primary" onclick="BPZ.navigate('learn-topic-korea',{topicId:'${next.id}'})" style="font-size:14px;">Next: ${next.title.split(':')[0]} →</button>` : `<button class="btn-primary" onclick="BPZ.navigate('learn-hub-korea')" style="font-size:14px;">Back to Korea Hub →</button>`}
+        </div>
+      </div>
+    </div>`;
+};
+
+// ════════════════════════════════════════════════════════════
+//  CASE STUDY — KOREA
+// ════════════════════════════════════════════════════════════
+BPZ.ui.caseStudyKorea = function() {
+  const c = BPZ.data.koreaCaseStudies.find(x => x.id === BPZ.state.caseId);
+  if (!c) { BPZ.navigate('learn-hub-korea'); return ''; }
+  const tagColMap = { emerald:'tag-emerald', cyan:'tag-cyan', amber:'tag-amber', indigo:'tag-indigo', rose:'tag-rose' };
+  const tc = tagColMap[c.tagColour] || 'tag-indigo';
+
+  const sections = [
+    { key: 'whatHappened',   icon: '📖', title: 'WHAT HAPPENED' },
+    { key: 'whyItWorked',    icon: '💡', title: 'WHY IT WORKED' },
+    { key: 'mistake',        icon: '⚠️', title: 'THE MISTAKE / TRADE-OFF' },
+    { key: 'simulationLink', icon: '🎮', title: 'IN YOUR SIMULATION' },
+  ];
+
+  return `
+    <div style="min-height:100vh;background:var(--bg);">
+      ${renderNav('Korea · ' + c.category)}
+      <div style="max-width:720px;margin:0 auto;padding:48px 24px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:24px;">
+          <button class="btn-ghost" style="font-size:13px;padding:6px 12px;" onclick="BPZ.navigate('learn-hub-korea')">← Korea Hub</button>
+          <span style="color:var(--border);">/</span>
+          <span style="font-size:13px;color:var(--muted);">${c.brand}</span>
+        </div>
+
+        <!-- Header -->
+        <div style="display:flex;align-items:start;gap:18px;margin-bottom:24px;">
+          <div style="font-size:56px;flex-shrink:0;line-height:1;">${c.icon}</div>
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="tag ${tc}">${c.tag}</span>
+              <span style="font-size:12px;color:var(--muted);">🇰🇷 ${c.year}</span>
+            </div>
+            <h1 class="font-display font-bold text-2xl leading-snug mb-2">${c.title}</h1>
+            <p style="font-size:14px;color:var(--text-sub);line-height:1.6;margin:0;">${c.summary}</p>
+          </div>
+        </div>
+
+        <!-- Outcome pill -->
+        <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:10px;padding:12px 16px;margin-bottom:28px;display:flex;gap:10px;align-items:start;">
+          <span style="font-size:16px;flex-shrink:0;">🏆</span>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#10b981;margin-bottom:4px;">OUTCOME</div>
+            <p style="font-size:13px;color:var(--text-sub);margin:0;line-height:1.5;">${c.outcome}</p>
+          </div>
+        </div>
+
+        <!-- Lesson pill -->
+        <div style="background:rgba(244,63,94,0.08);border:1px solid rgba(244,63,94,0.25);border-radius:10px;padding:12px 16px;margin-bottom:32px;display:flex;gap:10px;align-items:start;">
+          <span style="font-size:16px;flex-shrink:0;">🎯</span>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#f43f5e;margin-bottom:4px;">LESSON</div>
+            <p style="font-size:14px;font-weight:600;color:var(--text);margin:0;line-height:1.5;">${c.lesson}</p>
+          </div>
+        </div>
+
+        <!-- Content sections -->
+        ${sections.map(s => c[s.key] ? `
+          <div style="margin-bottom:28px;">
+            <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:12px;">${s.icon} ${s.title}</div>
+            <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 22px;">
+              <p style="font-size:14px;color:var(--text-sub);line-height:1.8;margin:0;">${c[s.key]}</p>
+            </div>
+          </div>` : '').join('')}
+
+        <!-- Tags -->
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:32px;">
+          ${(c.tags || []).map(t => `<span class="tag tag-indigo">${t}</span>`).join('')}
+        </div>
+
+        <!-- More cases -->
+        ${(() => {
+          const more = BPZ.data.koreaCaseStudies.filter(x => x.id !== c.id).slice(0, 2);
+          if (!more.length) return '';
+          return `
+            <div style="margin-bottom:28px;">
+              <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.05em;margin-bottom:12px;">MORE KOREA CASE STUDIES</div>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                ${more.map(x => `
+                  <div class="card-hover" onclick="BPZ.navigate('case-study-korea',{caseId:'${x.id}'})"
+                    style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;">
+                    <span style="font-size:26px;">${x.icon}</span>
+                    <div style="flex:1;">
+                      <div style="font-weight:600;font-size:13px;">${x.brand}</div>
+                      <div style="font-size:12px;color:var(--text-sub);">${x.title.split(':')[0]}</div>
+                    </div>
+                    <span style="color:var(--muted);font-size:14px;">→</span>
+                  </div>`).join('')}
+              </div>
+            </div>`;
+        })()}
+
+        <div class="flex gap-4">
+          <button class="btn-primary" onclick="BPZ.navigate('setup-player')" style="font-size:14px;">Apply in India Simulation →</button>
+          <button class="btn-secondary" onclick="BPZ.navigate('learn-hub-korea')" style="font-size:14px;">← Korea Hub</button>
+        </div>
+
       </div>
     </div>`;
 };

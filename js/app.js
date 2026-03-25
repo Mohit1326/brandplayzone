@@ -77,6 +77,10 @@ BPZ.render = function() {
     'debrief-questions': BPZ.ui.debriefQuestions,
     'value-chain':       BPZ.ui.valueChain,
     'value-chain-case':  BPZ.ui.valueChainCase,
+    'market-select':     BPZ.ui.marketSelect,
+    'learn-hub-korea':   BPZ.ui.learnHubKorea,
+    'learn-topic-korea': BPZ.ui.learnTopicKorea,
+    'case-study-korea':  BPZ.ui.caseStudyKorea,
   };
   const fn  = views[BPZ.state.screen];
   const app = document.getElementById('app');
