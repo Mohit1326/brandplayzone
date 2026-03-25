@@ -302,35 +302,71 @@ BPZ.engine = {
 
   /**
    * Pick 2 Socratic debrief questions based on year's performance signals.
-   * @returns {Array} — array of 2 question objects from BPZ.rationaleData.debrief
+   * Maps template `q` key → `text` and substitutes {X}/{Y}/{Z}/{N1}/{C} placeholders.
+   * @returns {Array} — array of 2 question objects ready for UI rendering
    */
   getDebriefQuestions(year, metrics, prevMetrics, decisions) {
     const db = BPZ.rationaleData.debrief;
     const questions = [];
 
-    // Signal 1 — pick the most pressing issue as Q1
+    // ── Placeholder resolution helpers ──────────────────────
+    const mix = (decisions && decisions.marketingMix) || {};
+    const reachPct = Math.round((mix.tv || 0) + (mix.digital || 0));
+    const mixEntries = Object.entries(mix).sort((a, b) => b[1] - a[1]);
+    const topChannelKey = mixEntries.length ? mixEntries[0][0] : 'tv';
+    const topChannelPct = mixEntries.length ? mixEntries[0][1] : 30;
+    const channelLabels = { tv: 'TV', digital: 'Digital', trade: 'Trade/BTL', pr: 'PR' };
+    const topChannelName = channelLabels[topChannelKey] || 'TV';
+
+    // Resolve a template: rename `q` → `text`, fill placeholders with real values
+    function resolve(template, signal) {
+      const vals = {
+        '{X}': signal === 'lowAwareness'         ? metrics.awareness
+             : signal === 'highAwarenessLowTrial' ? metrics.awareness
+             : signal === 'lowEquity'             ? metrics.brandEquityIndex
+             : signal === 'negativeEBITDA'        ? Math.abs(metrics.ebitdaCrore)
+             : signal === 'strongYear'            ? metrics.marketShare
+             : reachPct,
+        '{Y}': signal === 'lowAwareness'          ? reachPct
+             : signal === 'highAwarenessLowTrial'  ? parseFloat(metrics.trial).toFixed(1)
+             : signal === 'mixForward'             ? topChannelPct
+             : parseFloat(metrics.trial).toFixed(1),
+        '{Z}':  metrics.brandEquityIndex,
+        '{N1}': year + 1,
+        '{C}':  topChannelName,
+      };
+
+      let text = template.q || template.text || 'Reflect on this year\'s decisions.';
+      Object.entries(vals).forEach(([placeholder, value]) => {
+        text = text.split(placeholder).join(value);
+      });
+
+      return { ...template, text, signal };
+    }
+
+    // ── Signal 1 — most pressing issue ──────────────────────
     if (metrics.awareness < 20 && db.lowAwareness) {
-      questions.push({ ...db.lowAwareness, signal: 'lowAwareness' });
+      questions.push(resolve(db.lowAwareness, 'lowAwareness'));
     } else if (metrics.awareness > 30 && metrics.trial < 15 && db.highAwarenessLowTrial) {
-      questions.push({ ...db.highAwarenessLowTrial, signal: 'highAwarenessLowTrial' });
+      questions.push(resolve(db.highAwarenessLowTrial, 'highAwarenessLowTrial'));
     } else if (metrics.brandEquityIndex < 35 && db.lowEquity) {
-      questions.push({ ...db.lowEquity, signal: 'lowEquity' });
+      questions.push(resolve(db.lowEquity, 'lowEquity'));
     } else if (metrics.ebitdaCrore < 0 && db.negativeEBITDA) {
-      questions.push({ ...db.negativeEBITDA, signal: 'negativeEBITDA' });
+      questions.push(resolve(db.negativeEBITDA, 'negativeEBITDA'));
     } else if (db.strongYear) {
-      questions.push({ ...db.strongYear, signal: 'strongYear' });
+      questions.push(resolve(db.strongYear, 'strongYear'));
     }
 
-    // Q2 — always the forward-looking mix strategy question
+    // ── Q2 — always forward-looking mix strategy ─────────────
     if (db.mixForward) {
-      questions.push({ ...db.mixForward, signal: 'mixForward' });
+      questions.push(resolve(db.mixForward, 'mixForward'));
     }
 
-    // Fallback: if nothing matched, use first two available templates
+    // ── Fallback: use first two templates if nothing matched ──
     if (questions.length === 0) {
       const keys = Object.keys(db);
-      if (keys[0]) questions.push({ ...db[keys[0]], signal: keys[0] });
-      if (keys[1]) questions.push({ ...db[keys[1]], signal: keys[1] });
+      if (keys[0]) questions.push(resolve(db[keys[0]], keys[0]));
+      if (keys[1]) questions.push(resolve(db[keys[1]], keys[1]));
     }
 
     return questions.slice(0, 2);
