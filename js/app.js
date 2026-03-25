@@ -108,22 +108,51 @@ BPZ.setChannelBudget = function(channelId, pct) {
 // ── MARKETING MIX HELPER ─────────────────────────────────────
 BPZ.setMix = function(key, val) {
   BPZ.state.marketingMix[key] = val;
-  const mix   = BPZ.state.marketingMix;
-  const total = mix.tv + mix.digital + mix.trade + mix.pr;
-  const totalEl = document.getElementById('mix-total');
-  const btnEl   = document.getElementById('launch-btn');
-  const pctEl   = document.getElementById('mix-pct-' + key);
+  const mix    = BPZ.state.marketingMix;
+  const budget = BPZ.state.brand.budgetCrore;
+  const total  = mix.tv + mix.digital + mix.trade + mix.pr;
 
+  // % label
+  const pctEl   = document.getElementById('mix-pct-' + key);
   if (pctEl) pctEl.textContent = val + '%';
+
+  // ₹ absolute spend — updates live as slider moves
+  const spendEl = document.getElementById('mix-spend-' + key);
+  if (spendEl) spendEl.textContent = '₹' + (budget * val / 100).toFixed(1) + ' Cr';
+
+  // Total bar
+  const totalEl = document.getElementById('mix-total');
   if (totalEl) {
     totalEl.textContent = `${total}% ${total === 100 ? '✓' : `(${total > 100 ? '+' : ''}${total - 100} off)`}`;
     totalEl.style.color = total === 100 ? '#10b981' : '#f43f5e';
   }
+
+  // Launch button
+  const btnEl = document.getElementById('launch-btn');
   if (btnEl) {
     btnEl.disabled = total !== 100;
     btnEl.style.opacity = total === 100 ? '1' : '0.5';
     btnEl.style.cursor  = total === 100 ? 'pointer' : 'not-allowed';
   }
+};
+
+// ── BUDGET ADJUSTER (from mix screen) ────────────────────────
+BPZ.updateBudget = function(val) {
+  const v = parseFloat(val);
+  if (isNaN(v) || v <= 0) return;
+  BPZ.state.brand.budgetCrore = Math.min(500, Math.max(0.5, v));
+  const budget = BPZ.state.brand.budgetCrore;
+  const mix    = BPZ.state.marketingMix;
+
+  // Update all spend displays
+  ['tv', 'digital', 'trade', 'pr'].forEach(function(k) {
+    const el = document.getElementById('mix-spend-' + k);
+    if (el) el.textContent = '₹' + (budget * mix[k] / 100).toFixed(1) + ' Cr';
+  });
+
+  // Update headline
+  const hl = document.getElementById('budget-headline');
+  if (hl) hl.textContent = '₹' + budget + ' Crore';
 };
 
 // ── LAUNCH BRAND (Year 1 kick-off) ──────────────────────────

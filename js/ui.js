@@ -590,8 +590,39 @@ BPZ.ui.marketingMix = function() {
 
         <div class="mb-6">
           ${isYear1 ? `<div class="tag tag-indigo mb-3">Step 5 — Marketing Mix</div>` : ''}
-          <h1 class="font-display font-bold text-3xl mb-2">${isYear1 ? `Allocate your ₹${budget} Crore` : `Year ${year} Mix — ₹${budget} Crore`}</h1>
+          <h1 class="font-display font-bold text-3xl mb-2">
+            ${isYear1 ? `Allocate your ` : `Year ${year} Mix — `}<span id="budget-headline">₹${budget} Crore</span>
+          </h1>
           <p style="color:var(--text-sub);">${isYear1 ? 'Distribute your annual budget across the four spend buckets.' : `Adjust your mix based on Year ${year - 1} results. Every percentage point shifts your outcomes.`}</p>
+        </div>
+
+        <!-- ── Budget Adjustment Panel ── -->
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px 24px;margin-bottom:24px;">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.06em;margin-bottom:14px;">💰 ANNUAL MARKETING BUDGET — FMCG INDIA BENCHMARKS</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;">
+            ${BPZ.data.budgetTiers.map(t => {
+              const archetype = BPZ.state.brand.companyArchetype;
+              const isMatch   = t.companyArchetypes.includes(archetype);
+              return `
+                <div style="padding:10px 14px;border-radius:10px;border:1px solid ${isMatch ? 'rgba(99,102,241,0.5)' : 'var(--border)'};
+                  background:${isMatch ? 'rgba(99,102,241,0.1)' : 'var(--elevated)'};cursor:pointer;transition:border-color 0.15s;"
+                  onclick="document.getElementById('budget-input').value=${t.budgetCrore};BPZ.updateBudget(${t.budgetCrore});"
+                  title="Set budget to ₹${t.budgetCrore} Crore">
+                  <div style="font-size:16px;margin-bottom:2px;">${t.icon}</div>
+                  <div style="font-size:12px;font-weight:700;color:${isMatch ? '#818cf8' : 'var(--text)'};">${t.name}</div>
+                  <div style="font-size:13px;font-weight:700;color:${isMatch ? '#22d3ee' : '#10b981'};">₹${t.budgetCrore} Cr</div>
+                  <div style="font-size:10px;color:var(--muted);">typical</div>
+                </div>`;
+            }).join('')}
+          </div>
+          <div style="display:flex;align-items:center;gap-0;background:var(--elevated);border:1px solid var(--border);border-radius:10px;overflow:hidden;max-width:320px;">
+            <span style="padding:0 14px;font-size:14px;font-weight:700;color:#10b981;background:var(--card);border-right:1px solid var(--border);height:44px;display:flex;align-items:center;">₹</span>
+            <input type="number" id="budget-input" value="${budget}" min="0.5" max="500" step="0.5"
+              style="flex:1;background:transparent;border:none;outline:none;padding:0 14px;height:44px;font-size:15px;font-weight:600;color:var(--text);width:120px;"
+              oninput="BPZ.updateBudget(this.value)" />
+            <span style="padding:0 14px;font-size:13px;color:var(--muted);height:44px;display:flex;align-items:center;">Crore / year</span>
+          </div>
+          <p style="font-size:11px;color:var(--muted);margin:8px 0 0;">Click a benchmark to snap to it, or type any value. Changes update ₹ spend amounts instantly.</p>
         </div>
 
         <!-- Year context (Year 2+) -->
@@ -623,9 +654,9 @@ BPZ.ui.marketingMix = function() {
                       <div style="font-size:11px;color:var(--muted);max-width:320px;">${item.description}</div>
                     </div>
                   </div>
-                  <div style="text-align:right;min-width:90px;">
+                  <div style="text-align:right;min-width:100px;">
                     <div style="font-size:18px;font-weight:700;color:${item.colour};" id="mix-pct-${item.key}">${mix[item.key]}%</div>
-                    <div style="font-size:11px;color:var(--muted);">₹${spend}Cr</div>
+                    <div style="font-size:12px;font-weight:600;color:var(--text-sub);" id="mix-spend-${item.key}">₹${spend} Cr</div>
                     ${deltaStr}
                   </div>
                 </div>
