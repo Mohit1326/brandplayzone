@@ -85,7 +85,7 @@ BPZ.ui.landing = function() {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16 max-w-2xl mx-auto">
 
           <!-- LEARN -->
-          <div class="card-hover" onclick="BPZ.navigate('learn-hub')"
+          <div class="card-hover" onclick="BPZ.navigate('market-select')"
             style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:32px;text-align:center;cursor:pointer;">
             <div style="width:60px;height:60px;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.2);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;">📚</div>
             <h2 class="font-display font-bold text-xl mb-2">Learn Hub</h2>
