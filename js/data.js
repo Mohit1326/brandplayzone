@@ -472,8 +472,6 @@ BPZ.data = {
         { id: 'acquire',         label: 'Explore acquisition talks',               cost: 0.2, description: 'Bold move. Feasibility depends on budget and synergy assessment.', metricEffect: { equityMod: 10, awareMod: 6 } },
       ],
     },
-  ],
-
     // ── 10 NEW EVENTS ─────────────────────────────────────────
     {
       id: 'social-scare',
